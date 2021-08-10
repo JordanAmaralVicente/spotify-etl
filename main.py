@@ -12,7 +12,31 @@ import sqlite3
 
 DATABASE_LOCATION = 'sqlite:///my_played_tracks.sqlite'
 USER_ID = 'jordanitalovicente'
-TOKEN = 'BQBLdny9iuOzL0ZPZZTZ13SONKcQaQ5S8uAjF0UWZ11EDOlcmNzdWF1_kPry5PoaW1vGl3vmXt-1aZvwqrgU52wIbHyw5DrqT9VnVUrfy-ruYqRU-g_uSiEo2ab1S2jni5qdfxvrKQf1UTcJBmlXI5FzrWyeSplu1it1hwA'
+TOKEN = 'BQAUE9vGvHHNbUuIonNbmNoVElXya2reuHRQSYyFMPOPvpWXcyy1dmT7ADCAAhHcKrsggE6oCHAGVLxDCIA0nNel6LhZVUaNeUl3yXngNQB56ZB6gK7qJFvxIZmSziwUBT2v900ikYzCwHzpk_xyknMdFmd4EKFjvx2x5jU'
+
+def check_if_valid_date(df: pd.DataFrame) -> bool:
+    if df.empty:
+        print('No songs downloaded. Finishing execution.')
+        return False
+    
+    if pd.Series(df['played_at']).is_unique:
+        pass
+    else:
+        raise Exception('Primary Key Check is violated')
+    
+    if df.isnull().values.any():
+        raise Exception('Null value found')
+    
+    yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+    yesterday = yesterday.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    timestamps = df['timestamp'].tolist()
+    for timestamp in timestamps:
+        if datetime.datetime.strptime(timestamp, '%Y-%m-%d') != yesterday:
+            raise Exception('At least one of the returned songs does not come from within the last 24 hours')
+
+    return True
+
 
 if __name__ == '__main__':
     headers = {
@@ -32,21 +56,22 @@ if __name__ == '__main__':
     song_names = []
     artist_names = []
     played_at = []
-    timestamps = []
+    timestamp = []
 
     for song in data['items']:
         song_names.append(song['track']['name'])
         artist_names.append(song['track']['album']['artists'][0]['name'])
         played_at.append(song['played_at'])
-        timestamps.append(song['played_at'][0:10])
+        timestamp.append(song['played_at'][0:10])
 
     song_dict = {
         'song_names': song_names,
         'artist_names': artist_names,
         'played_at': played_at,
-        'timestamps': timestamps,
+        'timestamp': timestamp,
     }
 
-    song_df = pd.DataFrame(song_dict, columns= ['song_names', 'artist_names', 'played_at', 'timestamps'])
+    song_df = pd.DataFrame(song_dict, columns= ['song_names', 'artist_names', 'played_at', 'timestamp'])
 
-    print(song_df)
+    if check_if_valid_date(song_df):
+        print('Data valid, proceed to load stage')
