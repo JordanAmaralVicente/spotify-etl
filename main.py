@@ -12,7 +12,7 @@ import time
 
 DATABASE_LOCATION = 'sqlite:///my_played_tracks.sqlite'
 USER_ID = 'jordanitalovicente'
-TOKEN = 'BQBOfi58nLwH7n7QggfDFvol8pIMatq4pwAgWABcp_bjibO1Mqbs5U2sRTx_4EyFfgG50fFmS8Dbw10998WOv6JOu3iJcv6WPjNUL30prDpHv2jr0zA2mjw5sXCpgzk3HsDEGQG_pI_1H7Qx_5Flf5dDa4k0_iglWzhdRzA'
+TOKEN = 'BQCopOKSWE1iXL4pjZwaPH7n329P0OeqG3ov1jA4_6DQbXjSLf3tHTcEpDNV8rq6m4j874T_9PTHBnDETAev2xSC5OU3A3t3Ewqr9sa7WJTQb6F6HJpQREipUahjckIeUgq43_JvdsJHMQof8fJXLLjGX2I6atvgNk6Y5jY'
 def check_if_valid_date(df: pd.DataFrame) -> bool:
     if df.empty:
         print('No songs downloaded. Finishing execution.')
@@ -77,3 +77,30 @@ if __name__ == '__main__':
     print(song_df)
     if check_if_valid_date(song_df):
         print('Data valid, proceed to load stage')
+
+    engine = sqlalchemy.create_engine(DATABASE_LOCATION)
+    conn = sqlite3.connect('my_played_tracks.sqlite')
+    cursor = conn.cursor()
+
+    sql_query = '''
+    CREATE TABLE IF NOT EXISTS my_played_tracks (
+        song_names VARCHAR(200),
+        artist_names VARCHAR(200),
+        played_at VARCHAR(200),
+        timestamp VARCHAR(200),
+        CONSTRAINT primary_key_constraint PRIMARY KEY (played_at)
+    );
+    '''
+
+    cursor.execute(sql_query)
+    print('Opened database successfully')
+
+    
+    song_df.to_sql('my_played_tracks', con=engine, if_exists='append', index=False)
+    
+        
+
+    conn.close()
+    print('Close database successfully')
+
+
